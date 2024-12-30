@@ -6,6 +6,7 @@ import { StepKonfirmasi } from "../../Components/step/StepKonfirmasi";
 import { getReservationDetail, updateTax } from "../confirmationSlice";
 import { createInvoice } from "../../Invoice/invoiceSlice";
 import Swal from "sweetalert2";
+import { getConfig } from "../../Config/configSlice";
 
 export const Confirmation = () => {
   const { BranchCode, reservationId } = useParams();
@@ -16,7 +17,20 @@ export const Confirmation = () => {
     (state) => state.confirmation.reservationDetail
   );
   const branchDetails = useSelector((state) => state.branch.branchDetail);
+  const configData = useSelector((state) => state.config.config);
   const [isLoading, setIsLoading] = useState(true);
+
+  const taxRate = parseFloat(
+    configData.find((config) => config.title === "TAX")?.content || 0
+  );
+
+  const dpRate = parseFloat(
+    configData.find((config) => config.title === "DP")?.content || 0
+  );
+
+  const mdrRate = parseFloat(
+    configData.find((config) => config.title === "MDR")?.content || 0
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +47,7 @@ export const Confirmation = () => {
       setIsLoading(false);
     };
     fetchData();
+    dispatch(getConfig());
   }, [dispatch, reservationId, navigate]);
 
   const handleBack = useCallback(() => {
@@ -90,6 +105,8 @@ export const Confirmation = () => {
     return `${day} ${month} ${year}`;
   };
 
+  const totalMDR = mdrRate / 100;
+
   const subtotal = (quantity, price, details) => {
     const detailsPrice = details?.reduce((total, detail) => {
       return total + (detail.ItemPackageDetailPrice || 0);
@@ -97,7 +114,8 @@ export const Confirmation = () => {
     return quantity * (price + detailsPrice);
   };
 
-  const tax = (subtotal, cookingCharge) => (subtotal + cookingCharge) * 0.1;
+  const tax = (subtotal, cookingCharge) =>
+    (subtotal + cookingCharge) * (taxRate / 100);
   const calculateTotal = (subtotal, tax, cookingCharge) =>
     subtotal + tax + cookingCharge;
 
@@ -153,8 +171,9 @@ export const Confirmation = () => {
         tax: totalTax,
         cookingCharge: totalCookingCharge,
         totalAmount: totalAmount,
+        dp: totalDP,
         isDisbursed: false,
-        mdr: 0.015,
+        mdr: totalMDR,
       };
       await dispatch(updateTax({ reservationId, updatedData }));
 
@@ -167,14 +186,15 @@ export const Confirmation = () => {
           branchName: reservationDetail.branchName,
           date: reservationDetail.date,
           time: reservationDetail.time,
-          guest: reservationDetail.guest,
+          pax: reservationDetail.pax,
           customer: reservationDetail.customer,
           items: reservationDetail.items,
           amount: reservationDetail.amount,
           tax: totalTax,
           cookingCharge: totalCookingCharge,
           totalAmount: totalAmount,
-          mdr: 0.015,
+          dp: totalDP,
+          mdr: totalMDR,
           note: reservationDetail.note,
         },
       };
@@ -186,6 +206,7 @@ export const Confirmation = () => {
       localStorage.removeItem("endTime");
       localStorage.removeItem("mainNote");
       localStorage.removeItem("cart");
+      localStorage.removeItem("served");
 
       if (invoiceResponse.invoice_url) {
         window.location.href = invoiceResponse.invoice_url;
@@ -219,6 +240,8 @@ export const Confirmation = () => {
     totalTax,
     totalCookingCharge
   );
+
+  const totalDP = Math.round(totalAmount * (dpRate / 100));
 
   return (
     <>
@@ -271,7 +294,17 @@ export const Confirmation = () => {
                     <div className="flex">
                       <p className="w-36">Jumlah Tamu</p>
                       <p className="mr-2">:</p>
-                      <p className="flex-1">{reservationDetail.guest} Tamu</p>
+                      <p className="flex-1">{reservationDetail.pax} Tamu</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-1 pb-1">
+                    <div className="flex">
+                      <p className="w-36">Catatan Khusus</p>
+                      <p className="mr-2">:</p>
+                      <p className="flex-1">
+                        {reservationDetail.noteReservation}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -282,7 +315,7 @@ export const Confirmation = () => {
                     className="text-md text-purple-900 cursor-pointer"
                     onClick={handleBack}
                   >
-                    Add Items
+                    Edit Item
                   </p>
                 </div>
                 <div className="bg-gray-100 rounded-lg p-2 leading-tight">
@@ -357,25 +390,62 @@ export const Confirmation = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-sm w-1/3">PB1</h2>
-                    <div className="flex text-sm items-center w-2/3 justify-end">
-                      <span className="w-10 text-right">Rp</span>
-                      <p className="ml-1 w-20 text-right">
-                        {formatRupiah(totalTax)}
-                      </p>
+                  {totalTax !== 0 && (
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-sm w-1/3">PB1</h2>
+                      <div className="flex text-sm items-center w-2/3 justify-end">
+                        <span className="w-10 text-right">Rp</span>
+                        <p className="ml-1 w-20 text-right">
+                          {formatRupiah(totalTax)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex justify-between font-semibold items-center">
-                    <h2 className="text-md w-1/3">Total</h2>
-                    <div className="flex text-md items-center w-2/3 justify-end">
-                      <span className="w-10 text-right">Rp</span>
-                      <p className="ml-1 w-20 text-right">
-                        {formatRupiah(totalAmount)}
-                      </p>
+                  {totalAmount !== totalSubtotal ? (
+                    <div className="flex justify-between font-semibold items-center">
+                      <h2 className="text-md w-1/3">Total</h2>
+                      <div className="flex text-md items-center w-2/3 justify-end">
+                        <span className="w-10 text-right">Rp</span>
+                        <p className="ml-1 w-20 text-right">
+                          {formatRupiah(totalAmount)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : dpRate === 0 ? (
+                    <div className="flex justify-between font-semibold items-center">
+                      <h2 className="text-md w-1/3">Total</h2>
+                      <div className="flex text-md items-center w-2/3 justify-end">
+                        <span className="w-10 text-right">Rp</span>
+                        <p className="ml-1 w-20 text-right">
+                          {formatRupiah(totalAmount)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {dpRate !== 0 && (
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-sm w-1/3">DP</h2>
+                      <div className="flex text-sm items-center w-2/3 justify-end">
+                        <p className="ml-1 w-20 text-right">
+                          {formatRupiah(dpRate)} %
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {dpRate !== 0 && (
+                    <div className="flex justify-between font-semibold items-center">
+                      <h2 className="text-md w-1/3">Total DP</h2>
+                      <div className="flex text-md items-center w-2/3 justify-end">
+                        <span className="w-10 text-right">Rp</span>
+                        <p className="ml-1 w-20 text-right">
+                          {formatRupiah(totalDP)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {totalSubtotal < branchDetails?.BranchMinimumPurchase && (
@@ -401,8 +471,8 @@ export const Confirmation = () => {
 
                 <div className="mt-6 text-center">
                   <p className="text-gray-600">
-                    Jika ada perubahan atau pembatalan, silakan hubungi kami
-                    melalui telepon atau WhatsApp.
+                    Jika ada perubahan, silakan hubungi kami melalui telepon
+                    atau WhatsApp.
                   </p>
                 </div>
               </>

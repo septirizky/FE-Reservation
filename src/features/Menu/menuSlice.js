@@ -2,25 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import API from "../API/Api";
 
-const MENU_URL = `${API}/item_menu`;
-
-export const getMenu = createAsyncThunk("menu/getMenu", async () => {
-  const response = await axios.get(MENU_URL, {
-    headers: {
-      "ngrok-skip-browser-warning": "true",
-    },
-  });
-  return response.data.data;
-});
+const MENU_URL = `${API}/menu`;
 
 export const getMenuBranch = createAsyncThunk(
   "menu/getMenuBranch",
   async (BranchCode) => {
-    const response = await axios.get(`${MENU_URL}/${BranchCode}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${MENU_URL}/${BranchCode}`);
     return response.data.data;
   }
 );
@@ -28,26 +15,13 @@ export const getMenuBranch = createAsyncThunk(
 const menuSlice = createSlice({
   name: "menu",
   initialState: {
-    menus: [],
     menuBranch: [],
-    getMenuStatus: "idle",
     getMenuBranchStatus: "idle",
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(getMenu.pending, (state) => {
-        state.getMenuStatus = "loading";
-      })
-      .addCase(getMenu.fulfilled, (state, action) => {
-        state.getMenuStatus = "succeeded";
-        state.menus = action.payload;
-      })
-      .addCase(getMenu.rejected, (state, action) => {
-        state.getMenuStatus = "failed";
-        state.error = action.error.message;
-      })
       .addCase(getMenuBranch.pending, (state) => {
         state.getMenuBranchStatus = "loading";
       })

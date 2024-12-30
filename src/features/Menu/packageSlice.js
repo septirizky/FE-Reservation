@@ -5,11 +5,7 @@ import API from "../API/Api";
 const PACKAGE_URL = `${API}/item_package`;
 
 export const getPackage = createAsyncThunk("package/getPackage", async () => {
-  const response = await axios.get(PACKAGE_URL, {
-    headers: {
-      "ngrok-skip-browser-warning": "true",
-    },
-  });
+  const response = await axios.get(PACKAGE_URL);
   return response.data.data;
 });
 

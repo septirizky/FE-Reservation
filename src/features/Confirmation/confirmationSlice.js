@@ -7,11 +7,7 @@ const RESERVATION_URL = `${API}/reservation`;
 export const getReservationDetail = createAsyncThunk(
   "confirmation/getReservationDetail",
   async (reservationId) => {
-    const response = await axios.get(`${RESERVATION_URL}/${reservationId}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${RESERVATION_URL}/${reservationId}`);
     return response.data.data;
   }
 );
@@ -24,7 +20,6 @@ export const updateTax = createAsyncThunk(
       updatedData,
       {
         headers: {
-          "ngrok-skip-browser-warning": "true",
           "Content-Type": "application/json",
         },
       }

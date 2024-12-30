@@ -7,11 +7,7 @@ const RESERVATION_URL = `${API}/reservation`;
 export const getReservation = createAsyncThunk(
   "reservation/getReservation",
   async () => {
-    const response = await axios.get(RESERVATION_URL, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(RESERVATION_URL);
     return response.data.data;
   }
 );
@@ -19,14 +15,7 @@ export const getReservation = createAsyncThunk(
 export const getReservationBranch = createAsyncThunk(
   "reservation/getReservationBranch",
   async (BranchCode) => {
-    const response = await axios.get(
-      `${RESERVATION_URL}_branch/${BranchCode}`,
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    );
+    const response = await axios.get(`${RESERVATION_URL}_branch/${BranchCode}`);
     return response.data.data;
   }
 );
@@ -34,11 +23,7 @@ export const getReservationBranch = createAsyncThunk(
 export const getReservationById = createAsyncThunk(
   "reservation/getReservationById",
   async (reservationId) => {
-    const response = await axios.get(`${RESERVATION_URL}/${reservationId}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${RESERVATION_URL}/${reservationId}`);
     return response.data.data;
   }
 );
@@ -46,11 +31,7 @@ export const getReservationById = createAsyncThunk(
 export const createReservation = createAsyncThunk(
   "reservation/createReservation",
   async (reservationData) => {
-    const response = await axios.post(RESERVATION_URL, reservationData, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.post(RESERVATION_URL, reservationData);
     return response.data;
   }
 );
@@ -58,18 +39,10 @@ export const createReservation = createAsyncThunk(
 export const updateReservation = createAsyncThunk(
   "reservation/updateReservation",
   async ({ reservationId, reservationData, orderData }) => {
-    const response = await axios.put(
-      `${RESERVATION_URL}/${reservationId}`,
-      {
-        ...reservationData,
-        ...orderData,
-      },
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    );
+    const response = await axios.put(`${RESERVATION_URL}/${reservationId}`, {
+      ...reservationData,
+      ...orderData,
+    });
     return response.data.data;
   }
 );
@@ -77,11 +50,7 @@ export const updateReservation = createAsyncThunk(
 export const deleteReservation = createAsyncThunk(
   "reservation/deleteReservation",
   async (reservationId) => {
-    const response = await axios.delete(`${RESERVATION_URL}/${reservationId}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.delete(`${RESERVATION_URL}/${reservationId}`);
     return response.data.data;
   }
 );
@@ -95,11 +64,6 @@ export const resetReservation = createAsyncThunk(
         date: "",
         time: "",
         guest: null,
-      },
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
       }
     );
     return response.data;

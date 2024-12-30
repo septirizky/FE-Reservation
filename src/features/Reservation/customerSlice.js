@@ -7,11 +7,7 @@ const CUSTOMER_URL = `${API}/customer`;
 export const getCustomer = createAsyncThunk(
   "customer/getCustomer",
   async () => {
-    const response = await axios.get(CUSTOMER_URL, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(CUSTOMER_URL);
     return response.data.data;
   }
 );
@@ -19,11 +15,7 @@ export const getCustomer = createAsyncThunk(
 export const getCustomerDetail = createAsyncThunk(
   "customer/getCustomerDetail",
   async (customerId) => {
-    const response = await axios.get(`${CUSTOMER_URL}/${customerId}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${CUSTOMER_URL}/${customerId}`);
     return response.data.data;
   }
 );
@@ -31,11 +23,7 @@ export const getCustomerDetail = createAsyncThunk(
 export const createCustomer = createAsyncThunk(
   "customer/createCustomer",
   async (customerData) => {
-    const response = await axios.post(CUSTOMER_URL, customerData, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.post(CUSTOMER_URL, customerData);
     return response.data;
   }
 );
@@ -43,11 +31,7 @@ export const createCustomer = createAsyncThunk(
 export const createCustomerGRO = createAsyncThunk(
   "customer/createCustomerGRO",
   async (customerData) => {
-    const response = await axios.post(`${CUSTOMER_URL}_gro`, customerData, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.post(`${CUSTOMER_URL}_gro`, customerData);
     return response.data;
   }
 );
@@ -57,12 +41,7 @@ export const updateCustomer = createAsyncThunk(
   async ({ customerId, customerData }) => {
     const response = await axios.put(
       `${CUSTOMER_URL}/${customerId}`,
-      customerData,
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
+      customerData
     );
     return response.data.data;
   }

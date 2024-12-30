@@ -9,18 +9,10 @@ export const verifyOtp = createAsyncThunk(
   "verifyOtp/verifyOtp",
   async ({ customerId, otp }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        VERIFY_OTP_URL,
-        {
-          customerId: customerId,
-          otp,
-        },
-        {
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+      const response = await axios.post(VERIFY_OTP_URL, {
+        customerId: customerId,
+        otp,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -34,17 +26,9 @@ export const resendOtp = createAsyncThunk(
   "verifyOtp/resendOtp",
   async ({ customerId }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        RESEND_OTP_URL,
-        {
-          customerId: customerId,
-        },
-        {
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+      const response = await axios.post(RESEND_OTP_URL, {
+        customerId: customerId,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(

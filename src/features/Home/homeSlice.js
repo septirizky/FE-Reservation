@@ -7,11 +7,7 @@ const BRANCH_CATEGORY_URL = `${API}/branch_category`;
 export const getBranchCategory = createAsyncThunk(
   "home/getBranchCategory",
   async () => {
-    const response = await axios.get(BRANCH_CATEGORY_URL, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(BRANCH_CATEGORY_URL);
     return response.data.data;
   }
 );

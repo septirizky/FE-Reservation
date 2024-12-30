@@ -8,11 +8,7 @@ export const createInvoice = createAsyncThunk(
   "invoice/createInvoice",
   async (invoiceData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${INVOICE_URL}`, invoiceData, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+      const response = await axios.post(`${INVOICE_URL}`, invoiceData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);

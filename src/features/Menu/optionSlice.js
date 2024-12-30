@@ -3,22 +3,14 @@ import axios from "axios";
 import API from "../API/Api";
 
 export const getOption = createAsyncThunk("option/getOption", async () => {
-  const response = await axios.get(`${API}/item_option`, {
-    headers: {
-      "ngrok-skip-browser-warning": "true",
-    },
-  });
+  const response = await axios.get(`${API}/item_option`);
   return response.data.data;
 });
 
 export const getOptionMenu = createAsyncThunk(
   "option/getOptionMenu",
   async (MenusID) => {
-    const response = await axios.get(`${API}/option_menu/${MenusID}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${API}/option_menu/${MenusID}`);
     return response.data.data;
   }
 );
@@ -27,12 +19,7 @@ export const getOptionCategory = createAsyncThunk(
   "option/getOptionCategory",
   async (CategoryItemID) => {
     const response = await axios.get(
-      `${API}/option_category/${CategoryItemID}`,
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
+      `${API}/option_category/${CategoryItemID}`
     );
     return response.data.data;
   }

@@ -3,19 +3,12 @@ import axios from "axios";
 import API from "../API/Api";
 
 const BRANCH_URL = `${API}/branch`;
-const BRANCH_CATEGORY_URL = `${API}/branch_category`;
+const BRANCH_QUOTA_URL = `${API}/branch_quota`;
 
 export const getBranch = createAsyncThunk(
   "branch/getBranch",
-  async (BranchCategoryName) => {
-    const response = await axios.get(
-      `${BRANCH_CATEGORY_URL}/${BranchCategoryName}`,
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    );
+  async (ranchCategoryName) => {
+    const response = await axios.get(`${BRANCH_URL}_all/${ranchCategoryName}`);
     return response.data.data;
   }
 );
@@ -23,23 +16,15 @@ export const getBranch = createAsyncThunk(
 export const getBranchDetail = createAsyncThunk(
   "branch/getBranchDetail",
   async (BranchCode) => {
-    const response = await axios.get(`${BRANCH_URL}/${BranchCode}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
-    return response.data.data[0];
+    const response = await axios.get(`${BRANCH_URL}/${BranchCode}`);
+    return response.data.data;
   }
 );
 
 export const getBranchQuota = createAsyncThunk(
   "branch/getBranchQuota",
   async (BranchCode) => {
-    const response = await axios.get(`${BRANCH_URL}_quota/${BranchCode}`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await axios.get(`${BRANCH_QUOTA_URL}/${BranchCode}`);
     return response.data.data;
   }
 );

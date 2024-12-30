@@ -1,3 +1,3 @@
-const API = "https://813b-120-188-39-101.ngrok-free.app";
+const API = "https://reservasi-be.bandjak.com";
 
 export default API;

@@ -9,6 +9,7 @@ import { updateReservation } from "../../Reservation/reservationSlice";
 import Swal from "sweetalert2";
 import noImage from "../../../assets/no_image.jpg";
 import { getPackage } from "../packageSlice";
+import { getConfig } from "../../Config/configSlice";
 
 export const Menu = () => {
   const { BranchCode, reservationId } = useParams();
@@ -19,6 +20,7 @@ export const Menu = () => {
   const categoryBranch = useSelector(
     (state) => state.category.categoriesBranch
   );
+  const configData = useSelector((state) => state.config.config);
 
   const modalRef = useRef(null);
   const menuRef = useRef(null);
@@ -34,7 +36,7 @@ export const Menu = () => {
   const [selectedCartItem, setSelectedCartItem] = useState(null);
   const [cart, setCart] = useState([]);
   const [note, setNote] = useState("");
-  const [itemNote, setItemNote] = useState("");
+  // const [itemNote, setItemNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3600);
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,6 +45,8 @@ export const Menu = () => {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [checkboxOptions, setCheckboxOptions] = useState([]);
+  const [served, setServed] = useState(null);
 
   const handleImageClick = (image) => {
     setSelectedImage(image);
@@ -75,8 +79,8 @@ export const Menu = () => {
         );
 
         if (filteredPackages.length > 0) {
-          setOptions(filteredPackages); 
-          setSelectedMenu(menu); 
+          setOptions(filteredPackages);
+          setSelectedMenu(menu);
           setIsPackageModalVisible(true);
         } else {
           Swal.fire({
@@ -142,6 +146,7 @@ export const Menu = () => {
     dispatch(getPackage(BranchCode));
     dispatch(getCategoryBranch(BranchCode));
     dispatch(getMenuBranch(BranchCode));
+    dispatch(getConfig());
   }, [dispatch, BranchCode]);
 
   useEffect(() => {
@@ -186,6 +191,7 @@ export const Menu = () => {
     localStorage.removeItem("endTime");
     localStorage.removeItem("mainNote");
     localStorage.removeItem("cart");
+    localStorage.removeItem("served");
     navigate(`/r/${BranchCode}`);
   }, [BranchCode, navigate]);
 
@@ -228,6 +234,19 @@ export const Menu = () => {
 
     return () => clearInterval(timer);
   }, [handleBack]);
+
+  useEffect(() => {
+    // Filter data untuk checkbox
+    const filteredOptions = configData.filter(
+      (item) => item.title === "DISAJIKAN" && item.show === true
+    );
+    setCheckboxOptions(filteredOptions);
+  }, [configData]);
+
+  const handleCheckboxChange = (option) => {
+    setServed(option.content);
+    localStorage.setItem("served", option.content);
+  };
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -283,7 +302,7 @@ export const Menu = () => {
   };
 
   // Fungsi untuk menambah item ke keranjang
-  const addToCart = (menu, options, od_desc = "") => {
+  const addToCart = (menu, options) => {
     const existingItem = cart.find(
       (item) =>
         item.MenuName === menu.MenuName &&
@@ -307,7 +326,6 @@ export const Menu = () => {
           quantity: 1,
           options,
           CookingCharge: menu.CookingCharge,
-          itemNote: od_desc,
           MenuPackage: menu.MenuPackage,
         },
       ];
@@ -322,6 +340,16 @@ export const Menu = () => {
     if (savedCart) {
       setCart(JSON.parse(savedCart));
     }
+
+    const savedServed = localStorage.getItem("served");
+    if (savedServed) {
+      setServed(savedServed);
+    }
+
+    const savedNote = localStorage.getItem("mainNote");
+    if (savedNote) {
+      setNote(savedNote);
+    }
   }, []);
 
   const getTotalItemsPerMenu = (menuName) => {
@@ -332,7 +360,6 @@ export const Menu = () => {
 
   useEffect(() => {
     if (selectedCartItem) {
-      // Cari item yang sesuai di dalam cart
       const updatedCartItem = cart.find(
         (item) =>
           item.MenuName === selectedCartItem.MenuName &&
@@ -340,7 +367,6 @@ export const Menu = () => {
             JSON.stringify(selectedCartItem.options)
       );
 
-      // Jika item ada, perbarui selectedCartItem
       if (updatedCartItem) {
         setSelectedCartItem(updatedCartItem);
       }
@@ -477,9 +503,8 @@ export const Menu = () => {
       );
       setCart(updatedCart);
       localStorage.setItem("cart", JSON.stringify(updatedCart));
-      setSelectedCartItem(null); // Tutup modal jika quantity 0
+      setSelectedCartItem(null);
     } else if (existingItem) {
-      // Jika quantity lebih dari 1, kurangi quantity
       const updatedCart = cart.map((item) =>
         item.MenuName === menu.MenuName &&
         JSON.stringify(item.options || []) ===
@@ -507,7 +532,7 @@ export const Menu = () => {
         if (filteredPackages.length > 0) {
           setOptions(filteredPackages);
           setIsPackageModalVisible(true);
-          return; // Keluar dari fungsi setelah menampilkan modal package
+          return;
         } else {
           Swal.fire({
             icon: "error",
@@ -564,40 +589,32 @@ export const Menu = () => {
 
   const handleOptionSubmit = () => {
     if (selectedMenu) {
-      addToCart(selectedMenu, selectedOptions, itemNote);
+      addToCart(selectedMenu, selectedOptions);
       setSelectedOptions([]);
       setIsModalVisible(false);
-      setItemNote(""); // Reset note setelah ditambahkan
     }
   };
 
-  const updateItemNote = (menuName, options, newNote) => {
-    const updatedCart = cart.map((item) =>
-      item.MenuName === menuName &&
-      JSON.stringify(item.options) === JSON.stringify(options)
-        ? { ...item, itemNote: newNote }
-        : item
-    );
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
-
-  useEffect(() => {
-    const savedNote = localStorage.getItem("mainNote");
-    if (savedNote) {
-      setNote(savedNote);
-    }
-  }, []);
+  // const updateItemNote = (menuName, options, newNote) => {
+  //   const updatedCart = cart.map((item) =>
+  //     item.MenuName === menuName &&
+  //     JSON.stringify(item.options) === JSON.stringify(options)
+  //       ? { ...item, itemNote: newNote }
+  //       : item
+  //   );
+  //   setCart(updatedCart);
+  //   localStorage.setItem("cart", JSON.stringify(updatedCart));
+  // };
 
   useEffect(() => {
     if (isModalVisible || isCartSummaryVisible || isDetailModalVisible) {
-      document.body.style.overflow = "hidden"; // Nonaktifkan scroll
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Aktifkan kembali scroll
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Bersihkan efek saat komponen di-unmount
+      document.body.style.overflow = "auto";
     };
   }, [isModalVisible, isCartSummaryVisible, isDetailModalVisible]);
 
@@ -661,17 +678,25 @@ export const Menu = () => {
   }, {});
 
   const handleCheckout = async () => {
-    if (isLoading) return; // Cegah jika masih dalam status loading
-    setIsLoading(true); // Set status loading menjadi true
+    if (!served) {
+      Swal.fire({
+        icon: "warning",
+        title: "Opsi Penyajian Belum Dipilih",
+        text: "Harap pilih opsi penyajian sebelum melanjutkan.",
+      });
+      return;
+    }
+    if (isLoading) return;
+    setIsLoading(true);
 
     const amount = calculateItemTotalPrice();
 
     const orderData = {
       amount: Math.round(amount),
       note: note,
+      served: served,
       items: cart.map((item) => {
         if (item.MenuPackage) {
-          // Jika MenuPackage = true, kirim menuName dan i_id dalam satu objek
           return {
             i_id: item.i_id,
             MenuName: item.MenuName,
@@ -687,7 +712,6 @@ export const Menu = () => {
             MenuPrice: item.MenuPrice,
             CookingCharge: item.CookingCharge,
             quantities: item.quantity,
-            od_desc: item.itemNote,
           };
         } else {
           return {
@@ -701,7 +725,6 @@ export const Menu = () => {
             MenuPrice: item.MenuPrice,
             CookingCharge: item.CookingCharge,
             quantities: item.quantity,
-            od_desc: item.itemNote,
           };
         }
       }),
@@ -1038,7 +1061,7 @@ export const Menu = () => {
                           (selected) => selected.OptionText === OptionText
                         )
                       )
-                    } // Disable jika semua grup belum memiliki pilihan
+                    }
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1448,7 +1471,7 @@ export const Menu = () => {
                     </div>
 
                     {/* Input untuk catatan item di bawah setiap item */}
-                    <div className="flex items-center mt-2">
+                    {/* <div className="flex items-center mt-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -1476,41 +1499,67 @@ export const Menu = () => {
                         placeholder="Catatan item (Tidak wajib)"
                         className="text-sm border rounded px-2 py-1 w-full"
                       />
-                    </div>
+                    </div> */}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Form untuk note di bagian bawah, di atas total harga dan tombol checkout */}
-            <div className="bg-white px-4 py-2 border-t">
-              <label className="block text-md font-semibold">Note :</label>
-              <div className="flex items-center border border-black rounded-lg px-3 py-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-5 h-5 mr-2 text-black"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h18M3 3v18M3 21h18M21 3v18M7 3h10m-3 6H7m-2 0h8m2 0h4"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Catatan pesanan"
-                  className="w-full outline-none text-sm text-black"
-                  value={note}
-                  onChange={handleNoteChange}
-                />
-              </div>
-            </div>
+            {cart.length > 0 && (
+              <div className="w-full p-2 bg-white rounded-md shadow-lg">
+                <h2 className="text-lg text-center font-bold">
+                  Pilih Opsi Penyajian
+                </h2>
 
-            {/* Total harga dan tombol Checkout */}
+                {checkboxOptions.map((option, index) => (
+                  <div key={index} className="flex items-center px-2">
+                    <input
+                      type="checkbox"
+                      id={`checkbox-${index}`}
+                      name="disajikan-option"
+                      value={option.content}
+                      checked={served === option.content}
+                      onChange={() => handleCheckboxChange(option)}
+                      className="checkbox accent-purple-900"
+                    />
+                    <label
+                      htmlFor={`checkbox-${index}`}
+                      className="ml-2 text-sm text-gray-700"
+                    >
+                      {option.content}
+                    </label>
+                  </div>
+                ))}
+
+                <div className="bg-white px-2 border-t">
+                  <label className="block text-md font-semibold">Note :</label>
+                  <div className="flex items-center border border-black rounded-lg px-3 py-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      className="w-5 h-5 mr-2 text-black"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h18M3 3v18M3 21h18M21 3v18M7 3h10m-3 6H7m-2 0h8m2 0h4"
+                      />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Catatan pesanan"
+                      className="w-full outline-none text-sm text-black"
+                      value={note}
+                      onChange={handleNoteChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="px-4 bg-white flex items-center justify-between">
               <div className="py-2">
                 <span className="block font-semibold text-sm">
@@ -1572,7 +1621,6 @@ export const Menu = () => {
               </div>
 
               <div className="space-y-4 m-3">
-                {/* Filter item di keranjang dengan MenuName yang sama */}
                 {cart
                   .filter((item) => item.MenuName === selectedCartItem.MenuName)
                   .map((item, index) => (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import CountrySelect from "../../Components/CountrySelect";
@@ -14,6 +14,7 @@ import { createCustomer } from "../customerSlice";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getBranchQuota } from "../../Branch/branchSlice";
+import { getConfig } from "../../Config/configSlice";
 
 const formatDate = (date) => {
   const options = { day: "numeric", month: "short", year: "numeric" };
@@ -37,20 +38,45 @@ export const Reservation = () => {
   const reservations = useSelector(
     (state) => state.reservation.reservationBranch
   );
-  const branchQuota = useSelector((state) => state.branch.branchQuota);
+  const configData = useSelector((state) => state.config.config);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [countryCode, setCountryCode] = useState("+62");
   const [phone, setPhone] = useState("");
-  const [guest, setGuest] = useState("");
+  const [pax, setPax] = useState("");
   const [date, setDate] = useState(getTomorrowDate());
   const [time, setTime] = useState("");
+  const [noteReservation, setNoteReservation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [agree, setAgree] = useState(false);
 
   const [hasDeleted, setHasDeleted] = useState(false);
   const isFirstRun = useRef(true);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [quotaByTime, setQuotaByTime] = useState({});
+  const [timeCapacity, setTimeCapacity] = useState({});
+  const [policies, setPolicies] = useState([]);
+
+  useEffect(() => {
+    if (!date || !quotaByTime || !reservations) return;
+
+    const selectedDate = date.toISOString().split("T")[0];
+    const slots = quotaByTime[selectedDate] || [];
+
+    const capacityData = {};
+
+    slots.forEach((slot) => {
+      const totalPax = reservations
+        .filter((res) => res.date === selectedDate && res.time === slot.time)
+        .reduce((sum, res) => sum + res.pax, 0);
+
+      const remainingQuota = slot.quota - totalPax;
+      capacityData[slot.time] = remainingQuota > 0 ? remainingQuota : 0;
+    });
+
+    setTimeCapacity(capacityData);
+  }, [date, quotaByTime, reservations]);
 
   useEffect(() => {
     if (isFirstRun.current) {
@@ -80,9 +106,40 @@ export const Reservation = () => {
   }, [dispatch, hasDeleted]);
 
   useEffect(() => {
+    const fetchQuotaData = async () => {
+      try {
+        const response = await dispatch(getBranchQuota(BranchCode)).unwrap();
+        const dates = Array.from(new Set(response.map((q) => q.date)));
+        setAvailableDates(dates);
+
+        const timeData = {};
+        response.forEach((quota) => {
+          if (!timeData[quota.date]) timeData[quota.date] = [];
+          timeData[quota.date].push({
+            time: quota.time,
+            quota: quota.quota,
+            show: quota.show,
+          });
+        });
+        setQuotaByTime(timeData);
+      } catch (error) {
+        console.error("Failed to fetch quota data", error);
+      }
+    };
+
+    fetchQuotaData();
     dispatch(getReservationBranch(BranchCode));
-    dispatch(getBranchQuota(BranchCode));
+    dispatch(getConfig());
   }, [dispatch, BranchCode]);
+
+  useEffect(() => {
+    if (configData && configData.length > 0) {
+      const filteredPolicies = configData.filter(
+        (item) => item.title === "KEBIJAKAN PRIVASI" && item.show
+      );
+      setPolicies(filteredPolicies);
+    }
+  }, [configData]);
 
   const handleBack = () => {
     navigate("/");
@@ -121,95 +178,10 @@ export const Reservation = () => {
     setPhone(phone);
   };
 
-  const getDayOfWeek = (dateStr) => {
-    return new Date(dateStr).getDay();
-  };
-
-  const tomorrowDate = getTomorrowDate();
-  tomorrowDate.setDate(tomorrowDate.getDate());
-
-  const timeOptions = useMemo(() => {
-    const dayOfWeek = getDayOfWeek(date);
-    const startHour =
-      dayOfWeek === 0 || dayOfWeek === 6
-        ? branchDetails?.BranchWeekEndOpen
-        : branchDetails?.BranchWeekDayOpen;
-    const endHour =
-      dayOfWeek === 0 || dayOfWeek === 6
-        ? branchDetails?.BranchWeekEndClosed
-        : branchDetails?.BranchWeekDayClosed;
-
-    const options = [];
-    const isTomorrow =
-      new Date(date).toISOString().split("T")[0] ===
-      tomorrowDate.toISOString().split("T")[0];
-    const openingHour = isTomorrow ? Math.max(startHour, 16) : startHour;
-
-    for (let hour = openingHour; hour <= endHour; hour++) {
-      const timeString = `${hour.toString().padStart(2, "0")}:00`;
-      options.push(timeString);
-    }
-
-    return options;
-  }, [
-    branchDetails?.BranchWeekDayClosed,
-    branchDetails?.BranchWeekDayOpen,
-    branchDetails?.BranchWeekEndClosed,
-    branchDetails?.BranchWeekEndOpen,
-    date,
-    tomorrowDate,
-  ]);
-
-  const MAX_GUESTS_PER_HOUR = 100;
-
-  const timeCapacity = useMemo(() => {
-    const capacity = {};
-
-    timeOptions.forEach((timeOption) => {
-      const branchQuotaForTime = branchQuota
-        ? branchQuota.find(
-            (quota) =>
-              quota.BranchQuotaTime === parseInt(timeOption.split(":")[0], 10)
-          )
-        : null;
-
-      const maxGuests = branchQuotaForTime
-        ? branchQuotaForTime.BranchQuotaPax
-        : MAX_GUESTS_PER_HOUR;
-
-      const totalGuests = reservations
-        .filter(
-          (reservation) =>
-            formatDate(reservation.date) === formatDate(date) &&
-            reservation.time === timeOption
-        )
-        .reduce((total, reservation) => {
-          const guests = reservation.guest || 0;
-          return total + guests;
-        }, 0);
-
-      const remainingGuests = maxGuests - totalGuests;
-      capacity[timeOption] = remainingGuests > 0 ? remainingGuests : 0;
-    });
-
-    return capacity;
-  }, [reservations, date, timeOptions, branchQuota]);
-
-  const handleTimeSelect = (selectedTime) => {
-    if (timeCapacity[selectedTime] > 0) {
-      setTime(selectedTime);
-      if (guest > timeCapacity[selectedTime]) {
-        setGuest(timeCapacity[selectedTime]);
-      }
-    }
-  };
-
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-
-      // Validasi form
-      if (!name || !phone || !email || !guest || !time) {
+      if (!name || !phone || !email || !pax || !time) {
         Swal.fire({
           icon: "warning",
           title: "Form Tidak Lengkap",
@@ -220,7 +192,7 @@ export const Reservation = () => {
 
       handleSaveData();
 
-      if (guest > timeCapacity[time]) {
+      if (pax > timeCapacity[time]) {
         Swal.fire({
           icon: "warning",
           title: "Kapasitas Tamu Tidak Cukup",
@@ -235,7 +207,7 @@ export const Reservation = () => {
         name: name,
         phone: countryCode + phone,
         email: email,
-        branchName: branchDetails.BranchName,
+        branchName: branchDetails.branchName,
       };
 
       try {
@@ -256,10 +228,11 @@ export const Reservation = () => {
 
         const reservationData = {
           branchCode: BranchCode,
-          branchName: branchDetails.BranchName,
+          branchName: branchDetails.branchName,
           date: formatDate(date),
           time: formatTime(time),
-          guest: guest,
+          pax: pax,
+          noteReservation: noteReservation,
           customer: {
             customerId: customerId,
             name: name,
@@ -274,7 +247,6 @@ export const Reservation = () => {
 
         const reservationId = reservationResponse.data.reservationId;
 
-        // Simpan reservationId ke localStorage
         localStorage.setItem("reservationId", reservationId);
 
         if (customerResponse.data.otpVerified) {
@@ -305,7 +277,8 @@ export const Reservation = () => {
       date,
       dispatch,
       email,
-      guest,
+      pax,
+      noteReservation,
       name,
       navigate,
       phone,
@@ -392,16 +365,16 @@ export const Reservation = () => {
               </label>
               <input
                 type="number"
-                value={guest}
+                value={pax}
                 onChange={(e) => {
-                  const inputGuest = e.target.value;
-                  const formattedGuest = inputGuest.replace(/^0+/, "");
+                  const inputPax = e.target.value;
+                  const formattedPax = inputPax.replace(/^0+/, "");
 
-                  if (formattedGuest === "") {
-                    setGuest("");
+                  if (formattedPax === "") {
+                    setPax("");
                   } else {
-                    const numericGuest = Number(formattedGuest);
-                    setGuest(numericGuest); // Set nilai tanpa memunculkan Swal
+                    const numericPax = Number(formattedPax);
+                    setPax(numericPax);
                   }
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-900 focus:border-purple-900 sm:text-sm"
@@ -417,9 +390,10 @@ export const Reservation = () => {
               <DatePicker
                 selected={date}
                 onChange={(date) => setDate(date)}
+                includeDates={availableDates.map((d) => new Date(d))}
+                minDate={getTomorrowDate()}
                 dateFormat="dd/MM/yyyy"
-                minDate={tomorrowDate}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-900 focus:border-purple-900 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
               />
             </div>
 
@@ -432,28 +406,32 @@ export const Reservation = () => {
                   Pilih Waktu
                 </label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
-                  {timeOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`rounded-lg h-auto min-h-[50px] flex items-center justify-center ${
-                        time === option
-                          ? "bg-gray-300"
-                          : timeCapacity[option] === 0
-                          ? "bg-red-500 text-white cursor-not-allowed"
-                          : timeCapacity[option] <= 20
-                          ? "bg-yellow-500 text-white"
-                          : "bg-purple-900 text-white"
-                      }`}
-                      onClick={() => handleTimeSelect(option)}
-                      disabled={timeCapacity[option] === 0}
-                    >
-                      {option} <br />
-                      {timeCapacity[option] <= 20 && timeCapacity[option] > 0
-                        ? `Tersisa ${timeCapacity[option]}`
-                        : ""}
-                    </button>
-                  ))}
+                  {quotaByTime[date.toISOString().split("T")[0]]
+                    ?.filter((slot) => slot.show)
+                    .map((slot) => (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        className={`rounded-lg h-auto min-h-[50px] flex items-center justify-center ${
+                          time === slot.time
+                            ? "bg-gray-300"
+                            : timeCapacity[slot.time] === 0
+                            ? "bg-red-500 text-white cursor-not-allowed"
+                            : timeCapacity[slot.time] <= 20
+                            ? "bg-yellow-500 text-white"
+                            : "bg-purple-900 text-white"
+                        }`}
+                        onClick={() => setTime(slot.time)}
+                        disabled={timeCapacity[slot.time] === 0}
+                      >
+                        {slot.time} <br />
+                        {timeCapacity[slot.time] === 0
+                          ? "Penuh"
+                          : timeCapacity[slot.time] <= 20
+                          ? `Tersisa ${timeCapacity[slot.time]}`
+                          : ""}
+                      </button>
+                    ))}
                 </div>
               </div>
             )}
@@ -473,42 +451,28 @@ export const Reservation = () => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Catatan Khusus
+              </label>
+              <input
+                type="text"
+                value={noteReservation}
+                onChange={(e) => setNoteReservation(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-900 focus:border-purple-900 sm:text-sm"
+              />
+            </div>
+
             <div className="max-h-60 overflow-y-auto border p-4 bg-gray-100 rounded-md mt-4">
               <h3 className="text-sm font-medium text-gray-700">
                 Kebijakan Informasi Pelanggan:
               </h3>
               <div className="mt-2 text-gray-700 text-sm space-y-2">
-                <p>
-                  1. Kami menghargai privasi Anda. Informasi yang Anda berikan
-                  melalui form ini hanya akan digunakan untuk keperluan
-                  reservasi dan komunikasi terkait layanan restoran kami. Data
-                  pribadi Anda tidak akan dibagikan kepada pihak ketiga tanpa
-                  izin Anda.
-                </p>
-                <p>
-                  2. Pastikan bahwa semua informasi yang Anda masukkan adalah
-                  akurat dan lengkap. Informasi yang tidak tepat dapat
-                  mempengaruhi proses reservasi dan pelayanan yang Anda terima.
-                </p>
-                <p>
-                  3. Setelah Anda mengirimkan form, Anda akan menerima
-                  konfirmasi reservasi melalui email atau telepon. Harap
-                  pastikan bahwa alamat email dan nomor whatsapp yang Anda
-                  berikan valid dan dapat dihubungi.
-                </p>
-                <p>
-                  4. Untuk mengubah atau membatalkan reservasi, harap hubungi
-                  kami langsung melalui telepon atau email yang tertera dalam
-                  konfirmasi reservasi. Perubahan atau pembatalan harus
-                  dilakukan minimal 24 jam sebelum waktu reservasi yang
-                  dijadwalkan.
-                </p>
-                <p>
-                  5. Dengan mengisi dan mengirimkan form ini, Anda setuju untuk
-                  mematuhi kebijakan dan ketentuan yang berlaku di restoran
-                  kami. Kami berhak untuk menolak reservasi jika tidak memenuhi
-                  syarat atau jika terdapat pelanggaran terhadap kebijakan kami.
-                </p>
+                {policies.map((policy, index) => (
+                  <p key={index}>
+                    {index + 1}. {policy.content}
+                  </p>
+                ))}
               </div>
             </div>
 

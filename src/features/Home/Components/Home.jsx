@@ -20,38 +20,39 @@ export const Home = () => {
       <Loading status={status} />
       <Error status={status} error={error} />
       <div
-        className="min-h-screen bg-gray-100 flex flex-col justify-center items-center"
+        className="min-h-screen bg-gray-100 flex flex-col justify-center items-center overflow-x-hidden"
         style={{
-          backgroundImage: `url(https://image-layanan.nos.jkt-1.neo.id/background_1.png)`,
+          backgroundImage: `url(https://image-layanan.nos.jkt-1.neo.id/bg.jpeg)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="flex-grow flex flex-col justify-center items-center w-full">
-          <h1 className="text-5xl pt-2 font-bold text-gray-600">Reservasi</h1>
-          {/* <p className="text-2xl italic text-black">Online</p> */}
+        {/* Header */}
+        <div className="text-center pt-8">
+          <h1 className="text-5xl font-bold">Reservasi</h1>
+        </div>
 
-          <div className="mt-8 space-y-4 w-10/12">
-            {branchCategories.map((branchCategory) => {
-              return (
-                <Link
-                  key={branchCategory.BranchCategoryID}
-                  to={`/${branchCategory.BranchCategoryName}`}
-                  className="w-full py-4 bg-white text-purple-900 rounded-full shadow-md flex justify-between items-center px-6"
-                >
-                  <span className="flex pl-4 items-center text-xl font-bold">
-                    <img
-                      src={branchCategory.LogoUrl}
-                      alt="Bandar Djakarta"
-                      className="w-12 h-12 mr-2"
-                    />
-                    {branchCategory.BranchCategoryName}
-                  </span>
-                  <span className="text-red-500 text-xl">▼</span>
-                </Link>
-              );
-            })}
-          </div>
+        {/* Kategori Branch */}
+        <div className="mt-8 grid grid-cols-2 gap-8 items-center justify-center">
+          {branchCategories.map((branchCategory) => (
+            <Link
+              key={branchCategory.branchCategoryId}
+              to={`/${branchCategory.branchCategoryName}`}
+              className="flex flex-col items-center justify-center bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full max-w-[150px]"
+              style={{
+                aspectRatio: "3/4",
+              }}
+            >
+              <img
+                src={branchCategory.branchCategoryLogoUrl}
+                alt={branchCategory.branchCategoryName}
+                className="w-18 h-18 object-contain mb-4"
+              />
+              <span className="text-2xl font-bold text-blue-800 text-center">
+                {branchCategory.branchCategoryName}
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </>

@@ -23,6 +23,8 @@ export const Branch = () => {
     navigate("/");
   };
 
+  const visibleBranches = branch.filter((branch) => branch.branchShow);
+
   return (
     <>
       <Loading status={status} />
@@ -33,31 +35,31 @@ export const Branch = () => {
             <ArrowLeftIcon className="w-6 h-6 text-white" />
           </button>
           <h1 className="text-2xl font-bold flex-grow">
-            {branch[0]?.BranchCategoryName || "Loading..."}
+            {branch[0]?.branchCategoryName || "Loading..."}
           </h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 p-2 rounded-lg">
-          {branch.map((branch) => {
+          {visibleBranches.map((branch) => {
             return (
               <Link
-                key={branch.BranchID}
-                to={`/r/${branch.BranchCode}`}
+                key={branch.branchId}
+                to={`/r/${branch.branchCode}`}
                 className="card card-compact bg-white p-2 border rounded-lg"
               >
                 <img
-                  src={branch.BranchImage}
-                  alt={branch.BranchName}
+                  src={branch.branchImage}
+                  alt={branch.branchName}
                   className="object-cover h-80 w-full"
                 />
                 <div className="flex flex-col gap-1 px-1 py-3">
                   <h2 className="ml-1 font-semibold text-lg">
-                    {branch.BranchName}
+                    {branch.branchName}
                   </h2>
                   <div className="flex items-center gap-1">
-                    {branch.BranchPhone}
+                    {branch.branchPhone}
                   </div>
                   <div className="flex items-center gap-1 text-slate-500">
-                    <p className="text-xs">{branch.BranchAddress}</p>
+                    <p className="text-xs">{branch.branchAddress}</p>
                   </div>
                 </div>
               </Link>

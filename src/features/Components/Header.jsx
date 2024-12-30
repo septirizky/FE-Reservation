@@ -56,10 +56,13 @@ export const Header = ({ onBack, onSearchChange }) => {
           <ArrowLeftIcon className="w-6 h-6 text-white" />
         </button>
         <h1 className="text-2xl font-bold flex-grow">
-          {branchDetails?.BranchName || "Loading..."}
+          {branchDetails?.branchName || "Loading..."}
         </h1>
         {onSearchChange && (
-          <button onClick={toggleSearch} className="flex rounded-xl bg-purple-800 px-4 py-1">
+          <button
+            onClick={toggleSearch}
+            className="flex rounded-xl bg-purple-800 px-4 py-1"
+          >
             <MagnifyingGlassIcon className="w-5 h-5 pt-1 text-white" />
             <h3 className="ml-2">Cari</h3>
           </button>

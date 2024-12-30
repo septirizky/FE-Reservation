@@ -11,6 +11,7 @@ import cartReducer from "../features/Menu/cartSlice";
 import optionReducer from "../features/Menu/optionSlice";
 import confirmationReducer from "../features/Confirmation/confirmationSlice";
 import invoiceReducer from "../features/Invoice/invoiceSlice";
+import configReducer from "../features/Config/configSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,5 +27,10 @@ export const store = configureStore({
     option: optionReducer,
     confirmation: confirmationReducer,
     invoice: invoiceReducer,
+    config: configReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });

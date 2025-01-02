@@ -781,7 +781,7 @@ export const Menu = () => {
                           } hover:bg-gray-100`}
                         >
                           <img
-                            src={category.CategoryImage || noImage}
+                            src={category.CategoryThumbnail || noImage}
                             alt={category.CategoryName}
                             className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-cover rounded-full"
                           />
@@ -814,7 +814,7 @@ export const Menu = () => {
                           }`}
                         >
                           <img
-                            src={menu.MenusImage || noImage}
+                            src={menu.MenuThumbnail || noImage}
                             alt={menu.MenuName}
                             className={`w-full sm:h-20 md:h-36 object-cover rounded-lg mb-4 ${
                               menu.MenuSoldOut
@@ -947,7 +947,7 @@ export const Menu = () => {
                 {selectedMenu && (
                   <div className="flex flex-col items-center px-6 mt-4">
                     <img
-                      src={selectedMenu.MenusImage || noImage}
+                      src={selectedMenu.MenuThumbnail || noImage}
                       alt={selectedMenu.MenuName}
                       className="w-48 h-48 object-cover rounded-lg mb-4 cursor-pointer"
                       onClick={() =>
@@ -1124,7 +1124,7 @@ export const Menu = () => {
                 {selectedMenu && (
                   <div className="flex flex-col items-center px-6 mt-4">
                     <img
-                      src={selectedMenu.MenusImage || noImage}
+                      src={selectedMenu.MenuThumbnail || noImage}
                       alt={selectedMenu.MenuName}
                       className="w-48 h-48 object-cover rounded-lg mb-4 cursor-pointer"
                       onClick={() =>
@@ -1730,7 +1730,7 @@ export const Menu = () => {
             {/* Isi Modal */}
             <div className="flex flex-col mt-4 items-center px-6 flex-grow overflow-y-auto">
               <img
-                src={selectedMenu.MenusImage || noImage}
+                src={selectedMenu.MenuThumbnail || noImage}
                 alt={selectedMenu.MenuName}
                 className="w-48 h-48 object-cover rounded-lg mb-4 cursor-pointer"
                 onClick={() =>

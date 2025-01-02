@@ -9,18 +9,16 @@ export const getOption = createAsyncThunk("option/getOption", async () => {
 
 export const getOptionMenu = createAsyncThunk(
   "option/getOptionMenu",
-  async (MenusID) => {
-    const response = await axios.get(`${API}/option_menu/${MenusID}`);
+  async (MenuId) => {
+    const response = await axios.get(`${API}/option_menu/${MenuId}`);
     return response.data.data;
   }
 );
 
 export const getOptionCategory = createAsyncThunk(
   "option/getOptionCategory",
-  async (CategoryItemID) => {
-    const response = await axios.get(
-      `${API}/option_category/${CategoryItemID}`
-    );
+  async (CategoryId) => {
+    const response = await axios.get(`${API}/option_category/${CategoryId}`);
     return response.data.data;
   }
 );

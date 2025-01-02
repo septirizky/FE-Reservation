@@ -103,24 +103,24 @@ export const Menu = () => {
         const options = optionResponse?.payload || [];
 
         const categoryExists = options.some(
-          (option) => option.CategoryItemID === menu.CategoryItemID
+          (option) => option.CategoryId === menu.CategoryId
         );
         const menuExists = options.some(
-          (option) => option.MenusID === menu.MenusID
+          (option) => option.MenuId === menu.MenuId
         );
 
         if (categoryExists || menuExists) {
           let combinedOptions = [];
           if (categoryExists) {
             const categoryResponse = await dispatch(
-              getOptionCategory(menu.CategoryItemID)
+              getOptionCategory(menu.CategoryId)
             );
             const categoryOptions = categoryResponse?.payload || [];
             combinedOptions = [...combinedOptions, ...categoryOptions];
           }
 
           if (menuExists) {
-            const menuResponse = await dispatch(getOptionMenu(menu.MenusID));
+            const menuResponse = await dispatch(getOptionMenu(menu.MenuId));
             const menuOptions = menuResponse?.payload || [];
             combinedOptions = [...combinedOptions, ...menuOptions];
           }
@@ -414,24 +414,24 @@ export const Menu = () => {
         const options = optionResponse?.payload || [];
 
         const categoryExists = options.some(
-          (option) => option.CategoryItemID === menu.CategoryItemID
+          (option) => option.CategoryId === menu.CategoryId
         );
         const menuExists = options.some(
-          (option) => option.MenusID === menu.MenusID
+          (option) => option.MenuId === menu.MenuId
         );
 
         if (categoryExists || menuExists) {
           let combinedOptions = [];
           if (categoryExists) {
             const categoryResponse = await dispatch(
-              getOptionCategory(menu.CategoryItemID)
+              getOptionCategory(menu.CategoryId)
             );
             const categoryOptions = categoryResponse?.payload || [];
             combinedOptions = [...combinedOptions, ...categoryOptions];
           }
 
           if (menuExists) {
-            const menuResponse = await dispatch(getOptionMenu(menu.MenusID));
+            const menuResponse = await dispatch(getOptionMenu(menu.MenuId));
             const menuOptions = menuResponse?.payload || [];
             combinedOptions = [...combinedOptions, ...menuOptions];
           }
@@ -553,23 +553,23 @@ export const Menu = () => {
         const optionResponse = await dispatch(getOption());
         const options = optionResponse?.payload || [];
         const categoryExists = options.some(
-          (option) => option.CategoryItemID === item.CategoryItemID
+          (option) => option.CategoryId === item.CategoryId
         );
         const menuExists = options.some(
-          (option) => option.MenusID === item.MenusID
+          (option) => option.MenuId === item.MenuId
         );
 
         let combinedOptions = [];
         if (categoryExists) {
           const categoryResponse = await dispatch(
-            getOptionCategory(item.CategoryItemID)
+            getOptionCategory(item.CategoryId)
           );
           const categoryOptions = categoryResponse?.payload || [];
           combinedOptions = [...combinedOptions, ...categoryOptions];
         }
 
         if (menuExists) {
-          const menuResponse = await dispatch(getOptionMenu(item.MenusID));
+          const menuResponse = await dispatch(getOptionMenu(item.MenuId));
           const menuOptions = menuResponse?.payload || [];
           combinedOptions = [...combinedOptions, ...menuOptions];
         }
@@ -1013,8 +1013,7 @@ export const Menu = () => {
                                     value={option.OptionName}
                                     checked={selectedOptions.some(
                                       (selected) =>
-                                        selected.OptionsID ===
-                                          option.OptionsID &&
+                                        selected.OptionId === option.OptionId &&
                                         selected.OptionText === OptionText
                                     )}
                                     onChange={() =>
@@ -1238,7 +1237,7 @@ export const Menu = () => {
                                     </span>
                                     <input
                                       type="checkbox"
-                                      value={detail.ItemPackageDetailID}
+                                      value={detail.ItemPackageDetailId}
                                       onChange={(e) => {
                                         const isChecked = e.target.checked;
                                         setSelectedPackageOptions((prev) => {
@@ -1265,15 +1264,15 @@ export const Menu = () => {
                                           }
                                           return prev.filter(
                                             (opt) =>
-                                              opt.ItemPackageDetailID !==
-                                              detail.ItemPackageDetailID
+                                              opt.ItemPackageDetailId !==
+                                              detail.ItemPackageDetailId
                                           );
                                         });
                                       }}
                                       checked={selectedPackageOptions.some(
                                         (opt) =>
-                                          opt.ItemPackageDetailID ===
-                                          detail.ItemPackageDetailID
+                                          opt.ItemPackageDetailId ===
+                                          detail.ItemPackageDetailId
                                       )}
                                       className="checkbox accent-purple-900"
                                     />

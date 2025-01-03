@@ -37,7 +37,7 @@ export const Home = () => {
           {branchCategories.map((branchCategory) => (
             <Link
               key={branchCategory.branchCategoryId}
-              to={`/${branchCategory.branchCategoryName}`}
+              to={`/${branchCategory.branchCategoryCode}`}
               className="flex flex-col items-center justify-center bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full max-w-[150px]"
               style={{
                 aspectRatio: "3/4",

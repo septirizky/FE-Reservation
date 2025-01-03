@@ -7,8 +7,8 @@ const BRANCH_QUOTA_URL = `${API}/branch_quota`;
 
 export const getBranch = createAsyncThunk(
   "branch/getBranch",
-  async (ranchCategoryName) => {
-    const response = await axios.get(`${BRANCH_URL}_all/${ranchCategoryName}`);
+  async (branchCategoryCode) => {
+    const response = await axios.get(`${BRANCH_URL}_all/${branchCategoryCode}`);
     return response.data.data;
   }
 );
